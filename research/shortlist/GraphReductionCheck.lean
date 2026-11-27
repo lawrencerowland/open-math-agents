@@ -85,8 +85,11 @@ private theorem swap_decks {V W : Type*} {G : SimpleGraph V} {H : SimpleGraph W}
     (h : Hypomorphic G H) : Hypomorphic H G := by
   obtain ⟨σ, cards⟩ := h
   refine ⟨σ.symm, fun w => ?_⟩
-  obtain ⟨f⟩ := cards (σ.symm w)
-  exact ⟨by simpa only [σ.apply_symm_apply] using f.symm⟩
+  generalize hx : σ.symm w = v
+  have hv : σ v = w := (congrArg σ hx.symm).trans (σ.apply_symm_apply w)
+  rw [← hv]
+  obtain ⟨f⟩ := cards v
+  exact ⟨f.symm⟩
 
 private theorem interval_or_complement (known : H1)
     {V W : Type} [Fintype V] [Fintype W] (n : 3 ≤ Fintype.card V)
