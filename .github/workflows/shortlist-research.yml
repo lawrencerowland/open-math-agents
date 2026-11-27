@@ -42,7 +42,7 @@ jobs:
       - name: Replay the two Lean evaluations and check the scoped theorems
         working-directory: fc
         run: |
-          for file in Rendezvous UniversalCard GraphNext Frankl FranklNext GraphReductionCheck Replay22 Replay24; do
+          for file in Rendezvous UniversalCard GraphNext Frankl FranklNext FranklCyclic GraphReductionCheck Replay22 Replay24; do
             lake env lean "$GITHUB_WORKSPACE/research/shortlist/$file.lean"
           done
       - name: Reduce the full 24-step certificate in the kernel

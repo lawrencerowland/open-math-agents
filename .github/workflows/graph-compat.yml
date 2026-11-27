@@ -1,0 +1,61 @@
+name: Check the cross-carrier reconstruction theorems
+on:
+  push:
+    branches: [shortlist-research]
+    paths:
+      - 'research/shortlist/GraphNext.lean'
+      - 'research/shortlist/GraphNextExternal.lean'
+      - '.github/workflows/graph-compat.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'lawrencerowland/open-math-agents'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: SamuelSchlesinger/reconstruction-conjecture
+          ref: 419d639395bd5e3bc32f7e6e220a6c2c371e1ea5
+          path: original
+          persist-credentials: false
+      - name: Install Lean and fetch mathlib's precompiled dependency cache
+        working-directory: original
+        run: |
+          curl -fsSL --retry 3 https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o "$RUNNER_TEMP/elan-init.sh"
+          sh "$RUNNER_TEMP/elan-init.sh" -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/lake" exe cache get
+      - name: Build the pinned reconstruction theorems
+        working-directory: original
+        run: lake build Reconstruction.SeparatorDual
+      - name: Check the transport, applications and axiom dependencies
+        working-directory: original
+        run: |
+          set -euo pipefail
+          cp "$GITHUB_WORKSPACE/research/shortlist/GraphNext.lean" .
+          cp "$GITHUB_WORKSPACE/research/shortlist/GraphNextExternal.lean" .
+          lake env lean -o .lake/build/lib/lean/GraphNext.olean GraphNext.lean | tee "$RUNNER_TEMP/transport.log"
+          lake env lean GraphNextExternal.lean | tee -a "$RUNNER_TEMP/transport.log"
+          python3 - "$RUNNER_TEMP/transport.log" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          log = Path(sys.argv[1]).read_text()
+          allowed = {"propext", "Classical.choice", "Quot.sound"}
+          for name in ("crossDeck_iff_aligned", "reconstruct_of_same_carrier",
+                       "crossCarrierUniversal", "crossCarrierDisconnectedOrDual"):
+              qualified = re.escape("ReconstructionTransport." + name)
+              pattern = rf"'{qualified}' (?:does not depend on any axioms|depends on axioms:\s*\[([^\]]*)\])"
+              match = re.search(pattern, log)
+              if match is None:
+                  raise SystemExit(f"Missing axiom report for {name}")
+              deps = {a.strip() for a in (match[1] or "").split(",") if a.strip()}
+              if deps - allowed:
+                  raise SystemExit(f"Unexpected axioms for {name}: {deps - allowed}")
+          PY
