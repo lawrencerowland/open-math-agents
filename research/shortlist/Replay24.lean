@@ -2451,11 +2451,17 @@ theorem renewal (a : Audit) (h : a.result.failed < a.total) :
   have hs := (hasSum_geometric_of_lt_one
     (show (0 : ℝ) ≤ a.result.failed / a.total by positivity) hq).mul_left
       ((a.result.ticks : ℝ) / a.total)
-  have h₁ : (1 : ℝ) - a.result.failed / a.total ≠ 0 := by linarith
   have h₂ : (a.total : ℝ) - a.result.failed ≠ 0 := by linarith
+  have quotient : 1 - (a.result.failed : ℝ) / a.total =
+      ((a.total : ℝ) - a.result.failed) / a.total := by
+    rw [sub_div, div_self (ne_of_gt hm)]
+  have value : (a.result.ticks : ℝ) / (a.total - (a.result.failed : ℝ)) =
+      ((a.result.ticks : ℝ) / a.total) * (1 - (a.result.failed : ℝ) / a.total)⁻¹ := by
+    rw [quotient, ← div_eq_mul_inv]
+    field_simp [ne_of_gt hm, h₂] <;> ring
   unfold HasMean
-  convert hs using 1
-  field_simp [ne_of_gt hm, h₁, h₂]
+  rw [value]
+  exact hs
 
 theorem recorded_mean :
     HasMean recorded (8502716049883161287 / 1999178267027596331 : ℝ) := by
