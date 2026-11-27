@@ -1,4 +1,4 @@
-# From the 22-step certificate to the continuous-path value
+# From a closed-block certificate to the continuous-path value
 
 Take the start positions to be 0 and 2. A local route starts at 0, is continuous in nonnegative time and has Lipschitz constant at most one. The route space carries the Borel σ-algebra of the compact-open topology, as in `RendezvousStatement.lean`.
 
@@ -40,3 +40,7 @@ Han, Du, Vera and Zuluaga's Table 2 in the SODA version of *Improved bounds for 
 
 - [Table 2, Equation (3.2) and Remark 3.3](https://pure.uvt.nl/ws/files/1303232/improved_bounds.pdf)
 - [Han et al., Operations Research 56 (2008), 772–782](https://doi.org/10.1287/opre.1070.0439)
+
+## The 24-step policy
+
+The same construction uses independent draws of a 24-step word and a fair sign at every block. All words return home. Replace the period 22 by 24 throughout the argument. The initial mass is 3999999784000002916 and the surviving mass at time 24 is 1643249944810254. The first 24 survival masses sum to 17005432099766322574. Dividing by the successful mass proves that the continuous symmetric rendezvous value is at most 8502716049883161287 / 1999178267027596331. The law is a single probability law on anchored continuous 1-Lipschitz paths and both teams sample it independently.

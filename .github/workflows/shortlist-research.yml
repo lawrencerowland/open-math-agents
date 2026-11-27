@@ -45,7 +45,12 @@ jobs:
           for file in Rendezvous UniversalCard Frankl GraphReductionCheck Replay22 Replay24; do
             lake env lean "$GITHUB_WORKSPACE/research/shortlist/$file.lean"
           done
+      - name: Reduce the full 24-step certificate in the kernel
+        working-directory: fc
+        timeout-minutes: 12
+        run: lake env lean "$GITHUB_WORKSPACE/research/shortlist/Rendezvous24.lean"
       - name: Reduce the full 22-step certificate in the kernel
+        if: ${{ !cancelled() }}
         working-directory: fc
         timeout-minutes: 12
         run: lake env lean "$GITHUB_WORKSPACE/research/shortlist/Rendezvous22.lean"
