@@ -1,0 +1,51 @@
+name: Check the shortlist research
+on:
+  push:
+    branches: [shortlist-research]
+    paths:
+      - 'research/shortlist/**'
+      - '.github/workflows/shortlist-research.yml'
+permissions:
+  contents: read
+concurrency:
+  group: shortlist-research
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'lawrencerowland/open-math-agents'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: google-deepmind/formal-conjectures
+          ref: 9097e2f90e66d2f6244209cb1c07f7120d17ec53
+          path: fc
+          persist-credentials: false
+      - name: Install the pinned Lean and fetch mathlib
+        working-directory: fc
+        run: |
+          curl -fsSL --retry 3 https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o "$RUNNER_TEMP/elan-init.sh"
+          sh "$RUNNER_TEMP/elan-init.sh" -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/lake" exe cache get
+      - name: Recompute both exact tables
+        working-directory: research/shortlist
+        run: |
+          for steps in 22 24; do
+            python3 check_rendezvous_survival.py "rendezvous-$steps.tsv"
+            python3 check_rendezvous_dominance.py "rendezvous-$steps.tsv"
+          done
+      - name: Replay the two Lean evaluations and check the scoped theorems
+        working-directory: fc
+        run: |
+          for file in Rendezvous UniversalCard Frankl GraphReductionCheck Replay22 Replay24; do
+            lake env lean "$GITHUB_WORKSPACE/research/shortlist/$file.lean"
+          done
+      - name: Reduce the full 22-step certificate in the kernel
+        working-directory: fc
+        timeout-minutes: 12
+        run: lake env lean "$GITHUB_WORKSPACE/research/shortlist/Rendezvous22.lean"
