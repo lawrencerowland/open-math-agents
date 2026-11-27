@@ -83,14 +83,14 @@ theorem of_distinct_outside_traces (F : Finset (Finset α)) (a : α) (M : Finset
     (recover : ∀ X ∈ F, a ∉ X → ∀ Y ∈ F, a ∉ Y →
       X \ M = Y \ M → X = Y) : F.card ≤ 2 * occurrences F a := by
   classical
-  let omit := F.filter fun X => a ∉ X
+  let withoutA := F.filter fun X => a ∉ X
   let keep := F.filter fun X => a ∈ X
-  have lands : Set.MapsTo (fun X => X ∪ M) (omit : Set (Finset α))
+  have lands : Set.MapsTo (fun X => X ∪ M) (withoutA : Set (Finset α))
       (keep : Set (Finset α)) := by
     intro X hX
     exact Finset.mem_filter.mpr
       ⟨closed X (Finset.mem_filter.mp hX).1 M hM, Finset.mem_union_right _ ha⟩
-  have injects : (omit : Set (Finset α)).InjOn (fun X => X ∪ M) := by
+  have injects : (withoutA : Set (Finset α)).InjOn (fun X => X ∪ M) := by
     intro X hX Y hY heq
     obtain ⟨hXF, hXa⟩ := Finset.mem_filter.mp hX
     obtain ⟨hYF, hYa⟩ := Finset.mem_filter.mp hY
@@ -100,8 +100,8 @@ theorem of_distinct_outside_traces (F : Finset (Finset α)) (a : α) (M : Finset
     · simp [hi]
     · have membership := congrArg (fun S : Finset α => i ∈ S) heq
       simpa [hi] using (Iff.of_eq membership)
-  have bound : omit.card ≤ keep.card := Finset.card_le_card_of_injOn _ lands injects
-  have partition : keep.card + omit.card = F.card :=
+  have bound : withoutA.card ≤ keep.card := Finset.card_le_card_of_injOn _ lands injects
+  have partition : keep.card + withoutA.card = F.card :=
     Finset.card_filter_add_card_filter_not (s := F) (fun X => a ∈ X)
   change F.card ≤ 2 * keep.card
   omega
