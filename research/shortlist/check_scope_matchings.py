@@ -4,15 +4,16 @@ A candidate partner is a scope containing the target and containing the source.
 """
 from collections import Counter
 from itertools import combinations
-from functools import reduce
-from operator import or_
 
 
-def families():
-    scopes = [x for x in range(31) if x == 0 or bin(x).count('1') >= 3]
+def families(n=5):
+    top = (1 << n) - 1
+    if n < 3:
+        return
+    scopes = [x for x in range(top) if x == 0 or bin(x).count('1') >= 3]
     for size in range(len(scopes) + 1):
         for part in combinations(scopes, size):
-            family = set(part) | {31}
+            family = set(part) | {top}
             if all(x | y in family for x, y in combinations(part, 2)):
                 yield family
 
@@ -51,6 +52,13 @@ def class_of(family, a):
 
 
 if __name__ == '__main__':
+    for n in range(3, 6):
+        total = 0
+        for family in families(n):
+            assert any(matching({x: [y for y in family if y & a and x | y == y]
+                                 for x in family if not x & a}) for a in [1 << i for i in range(n)])
+            total += 1
+        print(f'{n} activities: containment matching exists for some target in all {total} families')
     pairs, groups = Counter(), Counter()
     first = {}
     for family in families():

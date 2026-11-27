@@ -32,6 +32,12 @@ jobs:
           sh "$RUNNER_TEMP/elan-init.sh" -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
           "$HOME/.elan/bin/lake" exe cache get
+      - name: Check the small graph and union-closed enumerations
+        working-directory: research/shortlist
+        run: |
+          python3 GraphNextWheel.py
+          python3 FranklNextWitness.py
+          python3 check_scope_matchings.py
       - name: Recompute both exact tables
         working-directory: research/shortlist
         run: |
